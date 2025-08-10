@@ -94,10 +94,10 @@ export const enterprisesApi = {
 
     const stats = {
       total: data.length,
-      new: data.filter((e: Enterprise) => e.status === 'new').length,
-      contacted: data.filter((e: Enterprise) => e.status === 'contacted').length,
-      converted: data.filter((e: Enterprise) => e.status === 'converted').length,
-      rejected: data.filter((e: Enterprise) => e.status === 'rejected').length,
+      new: data.filter(e => e.status === 'new').length,
+      contacted: data.filter(e => e.status === 'contacted').length,
+      converted: data.filter(e => e.status === 'converted').length,
+      rejected: data.filter(e => e.status === 'rejected').length,
     }
 
     return stats
