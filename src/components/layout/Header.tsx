@@ -1,6 +1,7 @@
 import React from 'react'
 import { useTranslation } from 'react-i18next'
 import { Globe } from 'lucide-react'
+import { Link } from 'react-router-dom'
 
 export function Header() {
   const { t, i18n } = useTranslation()
@@ -16,23 +17,30 @@ export function Header() {
   }
 
   return (
-    <header className="bg-white border-b border-gray-200 px-6 py-4">
-      <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold text-gray-900">
-          {t('dashboard.title')}
-        </h1>
+    <header className=" shadow-sm">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3 flex justify-between items-center">
+        <Link to="/" className="flex items-center space-x-2">
+          <img 
+            src="/images/logo/logo (3).png" 
+            alt="TopPronto Logo" 
+            className="h-10 w-auto" 
+          />
+          <h1 className="text-3xl md:text-4xl font-bold text-gray-900">
+            {t('dashboard.title')}
+          </h1>
+        </Link>
         
         {/* Language selector */}
         <div className="relative">
-          <div className="flex items-center space-x-2">
-            <Globe className="h-5 w-5 text-gray-400" />
+          <div className="flex items-center space-x-2 bg-white/10 backdrop-blur-sm rounded-lg p-1">
+            <Globe className="h-5 w-5 text-yellow-400" />
             <select
               value={i18n.language}
               onChange={(e) => changeLanguage(e.target.value)}
-              className="border border-gray-300 rounded-md px-3 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="bg-transparent text-gray-900 focus:outline-none text-sm cursor-pointer"
             >
               {languages.map((lang) => (
-                <option key={lang.code} value={lang.code}>
+                <option key={lang.code} value={lang.code} className=" text-gray-900">
                   {lang.name}
                 </option>
               ))}
