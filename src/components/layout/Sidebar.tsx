@@ -42,7 +42,7 @@ export function Sidebar() {
                 to={item.to}
                 className={({ isActive }) =>
                   `flex items-center px-4 py-3 text-sm font-medium rounded-lg transition-all ${isActive
-                    ? 'bg-yellow-500 text-green-900 shadow-md transform -translate-x-1'
+                    ? 'bg-gray-700 text-white shadow-md transform -translate-x-1'
                     : 'text-gray-700 hover:bg-gray-700 hover:text-white hover:pl-6'
                   }`
                 }

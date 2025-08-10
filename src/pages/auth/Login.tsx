@@ -53,7 +53,7 @@ export function Login() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    console.log('Login form submitted', { email })
+   
     setLoading(true)
     setError('')
 
