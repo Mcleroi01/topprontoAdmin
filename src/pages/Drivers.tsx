@@ -119,8 +119,6 @@ export function Drivers() {
     { value: "rejected", label: t("drivers.rejected") },
   ];
 
-  // Suppression de la fonction getStatusBadge car remplacée par un système plus simple avec des classes
-
   const handleStatusUpdate = (
     id: string,
     status: "pending" | "approved" | "rejected"
@@ -407,13 +405,13 @@ export function Drivers() {
           variants={container}
           initial="hidden"
           animate="show"
-          className="flex flex-col md:flex-row md:items-center md:justify-between gap-4"
+          className="flex flex-col md:flex-row md:items-center md:justify-between bg-gradient-to-r from-green-800 to-green-700 rounded-2xl p-6 text-white shadow-lg"
         >
           <motion.div variants={item} className="space-y-1">
-            <h1 className="text-4xl md:text-5xl font-bold text-yellow-400 bg-gradient-to-r from-green-800 to-green-700 bg-clip-text text-transparent">
+            <h1 className="text-4xl md:text-5xl font-bold text-gray-100 bg-gradient-to-r from-green-800 to-green-700 bg-clip-text text-transparent">
               {t("drivers.title")}
             </h1>
-            <p className="text-gray-600">
+            <p className="text-green-200">
               Gerencie e acompanhe os motoristas cadastrados
             </p>
           </motion.div>
@@ -422,7 +420,7 @@ export function Drivers() {
             <Button
               onClick={exportToCSV}
               variant="ghost"
-              className="flex items-center gap-2 border border-green-600 text-green-600 hover:bg-green-50"
+              className="flex items-center gap-2 border border-gray-200 text-gray-100 hover:bg-gray-400"
             >
               <Download className="h-4 w-4" />
               <span className="hidden sm:inline">{t("drivers.export")}</span>

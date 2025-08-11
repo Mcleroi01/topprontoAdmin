@@ -32,11 +32,11 @@ export function useAuth() {
 
     // Listen for auth changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-      console.log('Auth state changed:', event, session)
+      
       setUser(session?.user ?? null)
       
       if (session?.user) {
-        console.log('Auth state changed - user present, fetching admin data...')
+       
         fetchAdminUser(session.user.id)
       } else {
         console.log('Auth state changed - no user')
@@ -46,29 +46,29 @@ export function useAuth() {
     })
 
     return () => {
-      console.log('Cleaning up auth subscription')
+     
       subscription.unsubscribe()
     }
   }, [])
 
   const fetchAdminUser = async (userId: string) => {
     try {
-      console.log('Fetching admin user for ID:', userId)
       
-      const { data, error, status } = await supabase
+      
+      const { data, error } = await supabase
         .from('admin_users')
         .select('*')
         .eq('user_id', userId)
         .eq('is_active', true)
         .single()
 
-      console.log('Admin user fetch result:', { data, error, status })
+      
 
       if (error) {
         console.error('Error fetching admin user:', error)
         setAdminUser(null)
       } else {
-        console.log('Admin user data:', data)
+        
         setAdminUser(data)
       }
     } catch (error) {
@@ -93,12 +93,7 @@ export function useAuth() {
   }
 
   const isAdmin = Boolean(user && adminUser?.is_active)
-  console.log('isAdmin state:', { 
-    hasUser: Boolean(user), 
-    hasAdminUser: Boolean(adminUser), 
-    isAdminActive: adminUser?.is_active,
-    finalIsAdmin: Boolean(user && adminUser?.is_active)
-  })
+ 
 
   return {
     user,

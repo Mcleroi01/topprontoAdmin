@@ -1,14 +1,29 @@
-import React, { useState, useEffect } from 'react'
-import { useTranslation } from 'react-i18next'
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { Filter, Mail, Phone, CheckCircle, Circle, Loader2, ChevronDown } from 'lucide-react'
-import { Card, CardContent } from '../components/ui/Card'
-import { Input } from '../components/ui/Input'
-import { Button } from '../components/ui/Button'
-import { Table, TableHeader, TableBody, TableHead, TableRow, TableCell } from '../components/ui/Table'
-import { contactsApi } from '../services/api'
-import { format } from 'date-fns'
-import { motion } from 'framer-motion'
+import React, { useState, useEffect } from "react";
+import { useTranslation } from "react-i18next";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import {
+  Filter,
+  Mail,
+  Phone,
+  CheckCircle,
+  Circle,
+  Loader2,
+  ChevronDown,
+} from "lucide-react";
+import { Card, CardContent } from "../components/ui/Card";
+import { Input } from "../components/ui/Input";
+import { Button } from "../components/ui/Button";
+import {
+  Table,
+  TableHeader,
+  TableBody,
+  TableHead,
+  TableRow,
+  TableCell,
+} from "../components/ui/Table";
+import { contactsApi } from "../services/api";
+import { format } from "date-fns";
+import { motion } from "framer-motion";
 
 // Animation variants
 const container = {
@@ -16,21 +31,21 @@ const container = {
   show: {
     opacity: 1,
     transition: {
-      staggerChildren: 0.1
-    }
-  }
-}
+      staggerChildren: 0.1,
+    },
+  },
+};
 
 const item = {
   hidden: { opacity: 0, y: 20 },
-  show: { 
-    opacity: 1, 
+  show: {
+    opacity: 1,
     y: 0,
     transition: {
-      duration: 0.5
-    }
-  }
-}
+      duration: 0.5,
+    },
+  },
+};
 
 interface Contact {
   id: string;
@@ -44,60 +59,65 @@ interface Contact {
 }
 
 export function Contacts() {
-  const { t } = useTranslation()
-  const queryClient = useQueryClient()
-  const [readFilter, setReadFilter] = useState<string>('all')
-  const [searchQuery, setSearchQuery] = useState('')
-  const [selectedContact, setSelectedContact] = useState<Contact | null>(null)
-  const [isDrawerOpen, setIsDrawerOpen] = useState(false)
+  const { t } = useTranslation();
+  const queryClient = useQueryClient();
+  const [readFilter, setReadFilter] = useState<string>("all");
+  const [searchQuery, setSearchQuery] = useState("");
+  const [selectedContact, setSelectedContact] = useState<Contact | null>(null);
+  const [isDrawerOpen, setIsDrawerOpen] = useState(false);
 
   // Close drawer when selectedContact changes to null
   useEffect(() => {
     if (!selectedContact) {
-      setIsDrawerOpen(false)
+      setIsDrawerOpen(false);
     } else {
-      setIsDrawerOpen(true)
+      setIsDrawerOpen(true);
     }
-  }, [selectedContact])
+  }, [selectedContact]);
 
   // Close drawer when clicking outside
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
-      const target = event.target as HTMLElement
-      if (isDrawerOpen && !target.closest('#contact-drawer') && !target.closest(`[data-contact-id]`)) {
-        setSelectedContact(null)
+      const target = event.target as HTMLElement;
+      if (
+        isDrawerOpen &&
+        !target.closest("#contact-drawer") &&
+        !target.closest(`[data-contact-id]`)
+      ) {
+        setSelectedContact(null);
       }
-    }
+    };
 
-    document.addEventListener('mousedown', handleClickOutside)
-    return () => document.removeEventListener('mousedown', handleClickOutside)
-  }, [isDrawerOpen])
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, [isDrawerOpen]);
 
   const { data: contacts, isLoading } = useQuery({
-    queryKey: ['contacts', { isRead: readFilter, search: searchQuery }],
-    queryFn: () => contactsApi.getAll({ 
-      isRead: readFilter === 'all' ? undefined : readFilter === 'read',
-      search: searchQuery || undefined 
-    }),
-  })
+    queryKey: ["contacts", { isRead: readFilter, search: searchQuery }],
+    queryFn: () =>
+      contactsApi.getAll({
+        isRead: readFilter === "all" ? undefined : readFilter === "read",
+        search: searchQuery || undefined,
+      }),
+  });
 
   const markAsReadMutation = useMutation({
     mutationFn: (id: string) => contactsApi.markAsRead(id),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['contacts'] })
-      queryClient.invalidateQueries({ queryKey: ['contacts-unread'] })
+      queryClient.invalidateQueries({ queryKey: ["contacts"] });
+      queryClient.invalidateQueries({ queryKey: ["contacts-unread"] });
     },
-  })
+  });
 
   const readOptions = [
-    { value: 'all', label: 'Todos' },
-    { value: 'unread', label: t('contacts.unread') },
-    { value: 'read', label: t('contacts.read') },
-  ]
+    { value: "all", label: "Todos" },
+    { value: "unread", label: t("contacts.unread") },
+    { value: "read", label: t("contacts.read") },
+  ];
 
   const handleMarkAsRead = (id: string) => {
-    markAsReadMutation.mutate(id)
-  }
+    markAsReadMutation.mutate(id);
+  };
 
   if (isLoading) {
     return (
@@ -110,15 +130,16 @@ export function Contacts() {
     );
   }
 
-
   return (
     <div className="space-y-6">
-      <div className="flex justify-between items-center">
+      <div className="flex flex-col md:flex-row md:items-center md:justify-between bg-gradient-to-r from-green-800 to-green-700 rounded-2xl p-6 text-white shadow-lg">
         <motion.div variants={container} className="space-y-1">
-          <h1 className="text-4xl md:text-5xl font-bold text-yellow-400 bg-gradient-to-r from-green-800 to-green-700 bg-clip-text text-transparent">
+          <h1 className="text-4xl md:text-5xl font-bold">
             {t("contacts.title")}
           </h1>
-          <p className="text-gray-600"></p>
+          <p className="text-gray-200">
+            Visualize e gerencie todos os contatos recebidos pela plataforma.
+          </p>
         </motion.div>
       </div>
 
@@ -191,7 +212,9 @@ export function Contacts() {
                 {contacts?.map((contact) => (
                   <TableRow
                     key={contact.id}
-                    className={`cursor-pointer ${!contact.is_read ? "bg-blue-50" : ""} hover:bg-gray-50`}
+                    className={`cursor-pointer ${
+                      !contact.is_read ? "bg-blue-50" : ""
+                    } hover:bg-gray-50`}
                     onClick={() => setSelectedContact(contact)}
                     data-contact-id={contact.id}
                   >
@@ -278,23 +301,25 @@ export function Contacts() {
       </motion.div>
 
       {/* Contact Details Drawer */}
-      <div 
-        className={`fixed inset-0 z-50 transition-opacity duration-300 ${isDrawerOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}
+      <div
+        className={`fixed inset-0 z-50 transition-opacity duration-300 ${
+          isDrawerOpen ? "opacity-100" : "opacity-0 pointer-events-none"
+        }`}
         aria-hidden={!isDrawerOpen}
       >
         {/* Overlay */}
-        <div 
+        <div
           className="fixed inset-0 bg-black/50 backdrop-blur-sm transition-opacity"
           onClick={() => setSelectedContact(null)}
         />
-        
+
         {/* Drawer */}
         <motion.div
           id="contact-drawer"
           className="fixed top-0 right-0 h-full w-full max-w-md bg-white shadow-xl z-50 overflow-y-auto"
-          initial={{ x: '100%' }}
-          animate={{ x: isDrawerOpen ? 0 : '100%' }}
-          transition={{ type: 'tween', duration: 0.3 }}
+          initial={{ x: "100%" }}
+          animate={{ x: isDrawerOpen ? 0 : "100%" }}
+          transition={{ type: "tween", duration: 0.3 }}
         >
           {selectedContact && (
             <div className="p-6">
@@ -307,8 +332,18 @@ export function Contacts() {
                   onClick={() => setSelectedContact(null)}
                   className="text-gray-400 hover:text-gray-500"
                 >
-                  <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  <svg
+                    className="h-6 w-6"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M6 18L18 6M6 6l12 12"
+                    />
                   </svg>
                 </button>
               </div>
@@ -317,7 +352,7 @@ export function Contacts() {
               <div className="space-y-4">
                 <div>
                   <h3 className="text-sm font-medium text-gray-500">Email</h3>
-                  <a 
+                  <a
                     href={`mailto:${selectedContact.email}`}
                     className="text-blue-600 hover:text-blue-800 break-all"
                   >
@@ -327,8 +362,10 @@ export function Contacts() {
 
                 {selectedContact.phone && (
                   <div>
-                    <h3 className="text-sm font-medium text-gray-500">Téléphone</h3>
-                    <a 
+                    <h3 className="text-sm font-medium text-gray-500">
+                      Téléphone
+                    </h3>
+                    <a
                       href={`tel:${selectedContact.phone}`}
                       className="text-blue-600 hover:text-blue-800"
                     >
@@ -340,7 +377,10 @@ export function Contacts() {
                 <div>
                   <h3 className="text-sm font-medium text-gray-500">Date</h3>
                   <p className="text-gray-900">
-                    {format(new Date(selectedContact.created_at), "dd/MM/yyyy HH:mm")}
+                    {format(
+                      new Date(selectedContact.created_at),
+                      "dd/MM/yyyy HH:mm"
+                    )}
                   </p>
                 </div>
 
@@ -366,7 +406,7 @@ export function Contacts() {
                     variant="ghost"
                     onClick={() => {
                       handleMarkAsRead(selectedContact.id);
-                      setSelectedContact({...selectedContact, is_read: true});
+                      setSelectedContact({ ...selectedContact, is_read: true });
                     }}
                     loading={markAsReadMutation.isPending}
                     className="flex-1"
@@ -376,10 +416,12 @@ export function Contacts() {
                 )}
                 <Button
                   variant="primary"
-                  onClick={() => window.open(
-                    `mailto:${selectedContact.email}?subject=Re: ${selectedContact.subject}`,
-                    '_blank'
-                  )}
+                  onClick={() =>
+                    window.open(
+                      `mailto:${selectedContact.email}?subject=Re: ${selectedContact.subject}`,
+                      "_blank"
+                    )
+                  }
                   className="flex-1"
                 >
                   {t("contacts.reply")}

@@ -8,6 +8,7 @@ if (!supabaseUrl || !supabaseKey) {
 }
 
 export const supabase = createClient(supabaseUrl, supabaseKey)
+export const storage = supabase.storage
 
 // Types for our database
 export interface Driver {

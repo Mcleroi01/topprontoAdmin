@@ -20,12 +20,12 @@ export function Login() {
     console.log('Login useEffect - isAdmin:', isAdmin, 'authLoading:', authLoading)
     
     if (authLoading) {
-      console.log('Auth is still loading...')
+      
       return
     }
     
     if (isAdmin) {
-      console.log('User is admin, redirecting to /')
+      
       navigate('/', { replace: true })
     } else {
       console.log('User is not admin or not logged in, showing login form')
@@ -58,9 +58,9 @@ export function Login() {
     setError('')
 
     try {
-      console.log('Calling signIn...')
-      const { data, error } = await signIn(email, password)
-      console.log('signIn response:', { data, error })
+      
+      const { error } = await signIn(email, password)
+     
       
       if (error) {
         console.error('Login error:', error)
