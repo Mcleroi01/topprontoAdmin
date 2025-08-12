@@ -198,7 +198,7 @@ export function Enterprises() {
           className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 bg-gradient-to-r from-green-800 to-green-700 rounded-2xl p-6 text-white shadow-lg"
         >
           <motion.div variants={item} className="space-y-1">
-            <h1 className="text-4xl md:text-5xl font-bold text-gray-100 bg-gradient-to-r from-green-800 to-green-700 bg-clip-text text-transparent">
+            <h1 className="text-4xl md:text-5xl font-bold text-gray-100 ">
               {t("enterprises.title")}
             </h1>
             <p className="text-gray-200">

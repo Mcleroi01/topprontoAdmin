@@ -404,7 +404,7 @@ export function JobOffers() {
         <motion.div variants={item} className="flex items-center gap-3">
           <Button
             variant="ghost"
-            className="flex items-center gap-2 border border-gray-200 text-gray-200 hover:bg-gray-400"
+            className="flex items-center gap-2 border border-gray-200 text-gray-100 hover:bg-gray-400"
             onClick={() => setIsCreateDrawerOpen(true)}
           >
             <Plus className="h-4 w-4 mr-2" />
