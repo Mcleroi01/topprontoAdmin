@@ -22,18 +22,12 @@ import {
   TableRow,
   TableCell,
 } from "../components/ui/Table";
-import { jobOffersApi, jobApplicationsApi } from "../services/api";
+import { jobOffersApi } from "../services/api";
 import { format } from "date-fns";
 import { motion } from "framer-motion";
 import "./JobOffers.css";
-import { storage } from "../lib/supabase";
-import { Dialog } from "../components/ui/Dialog";
-import {
-  Tabs,
-  TabsContent,
-  TabsList,
-  TabsTrigger,
-} from "../components/ui/Tabs";
+// removed unused imports after refactor of Applications view
+import ApplicationsPanel from "../components/jobOffers/ApplicationsPanel";
 
 const item = {
   hidden: { opacity: 0, y: 20 },
@@ -47,43 +41,18 @@ export function JobOffers() {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedOffer, setSelectedOffer] = useState<string | null>(null);
   const [isCreateDrawerOpen, setIsCreateDrawerOpen] = useState(false);
-  const [isViewDrawerOpen, setIsViewDrawerOpen] = useState(false);
-  const [selectedApplication, setSelectedApplication] = useState<any>(null);
-  const [cvUrl, setCvUrl] = useState<string>("");
-  const [idCardUrl, setIdCardUrl] = useState<string>("");
+  // moved to ApplicationsPanel: isViewDrawerOpen, selectedApplication, cvUrl, idCardUrl
+  // Details drawer state (decoupled from applications view)
+  const [detailsOfferId, setDetailsOfferId] = useState<string | null>(null);
+  const [isDetailsDrawerOpen, setIsDetailsDrawerOpen] = useState(false);
 
-  const fetchApplicationFiles = async (application: any) => {
-    try {
-      // Reset URLs
-      setCvUrl("");
-      setIdCardUrl("");
-
-      // Generate file paths based on application ID
-      const cvPath = `applications/${application.id}/cv.pdf`;
-      const idCardPath = `applications/${application.id}/id_card.pdf`;
-
-      // Get public URLs for the files
-      const { data: cvData } = storage
-        .from("jobs-application")
-        .getPublicUrl(cvPath);
-      const { data: idCardData } = storage
-        .from("jobs-application")
-        .getPublicUrl(idCardPath);
-
-      // Set the URLs in state
-      setCvUrl(cvData.publicUrl);
-      setIdCardUrl(idCardData.publicUrl);
-    } catch (error) {
-      console.error("Error fetching application files:", error);
-      // You might want to show a toast notification here
-    }
-  };
+  // moved to ApplicationsPanel: fetchApplicationFiles
   const [newOffer, setNewOffer] = useState({
     title: "",
     description: "",
     location: "",
     salary_range: "",
-    employment_type: "Temps plein",
+    employment_type: "Tempo integral",
     requirements: [] as string[],
     benefits: [] as string[],
     is_active: true,
@@ -108,14 +77,7 @@ export function JobOffers() {
     }
   }, [selectedOffer]);
 
-  const { data: applications } = useQuery({
-    queryKey: ["job-applications", selectedOffer],
-    queryFn: () =>
-      selectedOffer
-        ? jobApplicationsApi.getByJobOffer(selectedOffer)
-        : Promise.resolve([]),
-    enabled: !!selectedOffer,
-  });
+  // applications query moved to ApplicationsPanel
 
   const toggleActiveMutation = useMutation({
     mutationFn: ({ id, isActive }: { id: string; isActive: boolean }) =>
@@ -155,6 +117,11 @@ export function JobOffers() {
     setSelectedOffer(offerId);
   };
 
+  const openOfferDetails = (offerId: string) => {
+    setDetailsOfferId(offerId);
+    setIsDetailsDrawerOpen(true);
+  };
+
   if (isLoading) {
     return (
       <div className="flex flex-col items-center justify-center h-[70vh]">
@@ -167,228 +134,17 @@ export function JobOffers() {
   }
 
   if (selectedOffer) {
-    const offer = jobOffers?.find((o) => o.id === selectedOffer);
     return (
-      <div className="space-y-6">
-        <div className="flex justify-between items-center">
-          <div>
-            <Button
-              variant="ghost"
-              onClick={() => setSelectedOffer(null)}
-              className="mb-4"
-            >
-              ← Voltar às ofertas
-            </Button>
-            <h1 className="text-2xl font-bold text-gray-900">
-              Candidaturas para: {offer?.title}
-            </h1>
-          </div>
-        </div>
-
-        <Card>
-          <CardContent className="p-0">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Nome</TableHead>
-                  <TableHead>Email</TableHead>
-                  <TableHead>Telefone</TableHead>
-                  <TableHead>Experiência</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead>Data</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {applications?.map((application) => (
-                  <TableRow
-                    key={application.id}
-                    className="cursor-pointer hover:bg-gray-50"
-                    onClick={() => {
-                      setSelectedApplication(application);
-                      fetchApplicationFiles(application);
-                      setIsViewDrawerOpen(true);
-                    }}
-                  >
-                    <TableCell className="font-medium">
-                      {application.first_name} {application.last_name}
-                    </TableCell>
-                    <TableCell>{application.email}</TableCell>
-                    <TableCell>{application.phone}</TableCell>
-                    <TableCell>{application.experience_years} anos</TableCell>
-                    <TableCell>
-                      <Badge
-                        variant={
-                          application.status === "accepted"
-                            ? "success"
-                            : application.status === "rejected"
-                            ? "danger"
-                            : application.status === "reviewed"
-                            ? "warning"
-                            : "default"
-                        }
-                      >
-                        {application.status}
-                      </Badge>
-                    </TableCell>
-                    <TableCell>
-                      {format(new Date(application.created_at), "dd/MM/yyyy")}
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-            {applications?.length === 0 && (
-              <div className="text-center py-8 text-gray-500">
-                Nenhuma candidatura ainda
-              </div>
-            )}
-          </CardContent>
-        </Card>
-      </div>
+      <ApplicationsPanel
+        offerId={selectedOffer}
+        onBack={() => setSelectedOffer(null)}
+      />
     );
   }
 
   return (
     <div className="space-y-6">
-      {/* Applications Section */}
-      {selectedOffer && (
-        <motion.div variants={item} className="space-y-4">
-          {/* Application Details Drawer */}
-          <Dialog open={isViewDrawerOpen} onOpenChange={setIsViewDrawerOpen}>
-            <div className="fixed right-0 top-0 h-full w-full max-w-md overflow-auto bg-white shadow-lg z-50">
-              {selectedApplication && (
-                <div className="p-6">
-                  <div className="flex items-center justify-between mb-6">
-                    <div>
-                      <h2 className="text-2xl font-bold">
-                        {selectedApplication.first_name}{" "}
-                        {selectedApplication.last_name}
-                      </h2>
-                      <p className="text-gray-600">
-                        {selectedApplication.email}
-                      </p>
-                    </div>
-                    <Badge
-                      variant={
-                        selectedApplication.status === "accepted"
-                          ? "success"
-                          : selectedApplication.status === "rejected"
-                          ? "danger"
-                          : selectedApplication.status === "reviewed"
-                          ? "warning"
-                          : "default"
-                      }
-                    >
-                      {selectedApplication.status}
-                    </Badge>
-                  </div>
-
-                  <Tabs defaultValue="details" className="w-full">
-                    <TabsList className="grid w-full grid-cols-3">
-                      <TabsTrigger value="details">Dados</TabsTrigger>
-                      <TabsTrigger value="documents">Documentos</TabsTrigger>
-                      <TabsTrigger value="experience">Experiência</TabsTrigger>
-                    </TabsList>
-
-                    <TabsContent value="details" className="mt-6">
-                      <div className="space-y-4">
-                        <div>
-                          <h3 className="font-medium text-gray-500">
-                            Telefone
-                          </h3>
-                          <p>{selectedApplication.phone || "Não informado"}</p>
-                        </div>
-                        <div>
-                          <h3 className="font-medium text-gray-500">
-                            Anos de Experiência
-                          </h3>
-                          <p>
-                            {selectedApplication.experience_years || "0"} anos
-                          </p>
-                        </div>
-                        <div>
-                          <h3 className="font-medium text-gray-500">
-                            Data de Candidatura
-                          </h3>
-                          <p>
-                            {format(
-                              new Date(selectedApplication.created_at),
-                              "dd/MM/yyyy"
-                            )}
-                          </p>
-                        </div>
-                      </div>
-                    </TabsContent>
-
-                    <TabsContent value="documents" className="mt-6">
-                      <div className="space-y-4">
-                        <div>
-                          <h3 className="font-medium mb-2">Currículo (CV)</h3>
-                          {cvUrl ? (
-                            <iframe
-                              src={cvUrl}
-                              className="w-full h-[500px] border rounded"
-                              title="Currículo"
-                            />
-                          ) : (
-                            <div className="text-center text-gray-500 py-8">
-                              Currículo não encontrado
-                            </div>
-                          )}
-                        </div>
-                        <div className="mt-6">
-                          <h3 className="font-medium mb-2">
-                            Documento de Identificação
-                          </h3>
-                          {idCardUrl ? (
-                            <iframe
-                              src={idCardUrl}
-                              className="w-full h-[500px] border rounded"
-                              title="Documento de Identificação"
-                            />
-                          ) : (
-                            <div className="text-center text-gray-500 py-8">
-                              Documento não encontrado
-                            </div>
-                          )}
-                        </div>
-                      </div>
-                    </TabsContent>
-
-                    <TabsContent value="experience" className="mt-6">
-                      <div className="space-y-4">
-                        <h3 className="font-medium">
-                          Experiência Profissional
-                        </h3>
-                        {selectedApplication.experience ? (
-                          <div className="whitespace-pre-line bg-gray-50 p-4 rounded">
-                            {selectedApplication.experience}
-                          </div>
-                        ) : (
-                          <p className="text-gray-500">
-                            Nenhuma experiência fornecida.
-                          </p>
-                        )}
-                      </div>
-                    </TabsContent>
-                  </Tabs>
-                </div>
-              )}
-            </div>
-          </Dialog>
-
-          <div className="flex items-center justify-between">
-            <h2 className="text-2xl font-bold">
-              Candidaturas para:{" "}
-              {jobOffers?.find((offer) => offer.id === selectedOffer)?.title}
-            </h2>
-            <Button variant="ghost" onClick={() => setSelectedOffer(null)}>
-              <X className="h-4 w-4 mr-2" />
-              Voltar para a lista
-            </Button>
-          </div>
-        </motion.div>
-      )}
+      {/* Applications Section moved to ApplicationsPanel */}
 
       {/* Job Offers Section */}
       <div className="flex flex-col md:flex-row md:items-center md:justify-between bg-gradient-to-r from-green-800 to-green-700 rounded-2xl p-6 text-white shadow-lg">
@@ -519,7 +275,7 @@ export function JobOffers() {
                         className="flex items-center"
                       >
                         <Users className="h-4 w-4 mr-1" />
-                        {offer.applications_count}
+                       
                       </Button>
                     </TableCell>
                     <TableCell>
@@ -527,6 +283,13 @@ export function JobOffers() {
                     </TableCell>
                     <TableCell>
                       <div className="flex items-center space-x-2">
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          onClick={() => openOfferDetails(offer.id)}
+                        >
+                          Detalhes
+                        </Button>
                         <Button
                           size="sm"
                           variant="ghost"
@@ -563,32 +326,33 @@ export function JobOffers() {
       {/* Job Offer Details Drawer */}
       <div
         className={`fixed inset-0 z-50 transition-opacity duration-300 ${
-          isCreateDrawerOpen ? "opacity-100" : "opacity-0 pointer-events-none"
+          isDetailsDrawerOpen ? "opacity-100" : "opacity-0 pointer-events-none"
         }`}
-        aria-hidden={!isCreateDrawerOpen}
+        aria-hidden={!isDetailsDrawerOpen}
       >
         {/* Overlay */}
-        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm transition-opacity" />
+        <div
+          className="fixed inset-0 bg-black/50 backdrop-blur-sm transition-opacity"
+          onClick={() => setIsDetailsDrawerOpen(false)}
+        />
         <motion.div
           id="job-offer-drawer"
           className="fixed top-0 right-0 h-full w-full max-w-md bg-white shadow-xl z-50 overflow-y-auto"
           initial={{ x: "100%" }}
-          animate={{ x: selectedOffer ? 0 : "100%" }}
+          animate={{ x: isDetailsDrawerOpen ? 0 : "100%" }}
           transition={{ type: "tween", duration: 0.3 }}
+          onClick={(e) => e.stopPropagation()}
         >
-          {selectedOffer &&
-            jobOffers?.find((offer) => offer.id === selectedOffer) && (
+          {detailsOfferId &&
+            jobOffers?.find((offer) => offer.id === detailsOfferId) && (
               <div className="p-6">
                 {/* Header */}
                 <div className="flex items-center justify-between mb-6">
                   <h2 className="text-xl font-semibold text-gray-900">
-                    {
-                      jobOffers.find((offer) => offer.id === selectedOffer)
-                        ?.title
-                    }
+                    {jobOffers.find((offer) => offer.id === detailsOfferId)?.title}
                   </h2>
                   <button
-                    onClick={() => setSelectedOffer(null)}
+                    onClick={() => setIsDetailsDrawerOpen(false)}
                     className="text-gray-400 hover:text-gray-500"
                     aria-label="Fechar"
                   >
@@ -615,10 +379,7 @@ export function JobOffers() {
                       Localização
                     </h3>
                     <p className="text-gray-900">
-                      {
-                        jobOffers.find((offer) => offer.id === selectedOffer)
-                          ?.location
-                      }
+                      {jobOffers.find((offer) => offer.id === detailsOfferId)?.location}
                     </p>
                   </div>
 
@@ -627,10 +388,7 @@ export function JobOffers() {
                       Tipo de Emprego
                     </h3>
                     <p className="text-gray-900">
-                      {
-                        jobOffers.find((offer) => offer.id === selectedOffer)
-                          ?.employment_type
-                      }
+                      {jobOffers.find((offer) => offer.id === detailsOfferId)?.employment_type}
                     </p>
                   </div>
 
@@ -639,7 +397,7 @@ export function JobOffers() {
                       Salário
                     </h3>
                     <p className="text-gray-900">
-                      {jobOffers.find((offer) => offer.id === selectedOffer)
+                      {jobOffers.find((offer) => offer.id === detailsOfferId)
                         ?.salary_range || "A combinar"}
                     </p>
                   </div>
@@ -650,13 +408,13 @@ export function JobOffers() {
                     </h3>
                     <Badge
                       variant={
-                        jobOffers.find((offer) => offer.id === selectedOffer)
+                        jobOffers.find((offer) => offer.id === detailsOfferId)
                           ?.is_active
                           ? "success"
                           : "default"
                       }
                     >
-                      {jobOffers.find((offer) => offer.id === selectedOffer)
+                      {jobOffers.find((offer) => offer.id === detailsOfferId)
                         ?.is_active
                         ? "Ativa"
                         : "Inativa"}
@@ -670,7 +428,7 @@ export function JobOffers() {
                     <p className="text-gray-900">
                       {format(
                         new Date(
-                          jobOffers.find((offer) => offer.id === selectedOffer)
+                          jobOffers.find((offer) => offer.id === detailsOfferId)
                             ?.created_at || new Date()
                         ),
                         "dd/MM/yyyy HH:mm"
@@ -684,7 +442,7 @@ export function JobOffers() {
                     </h3>
                     <div className="mt-2 space-y-2">
                       {jobOffers
-                        .find((offer) => offer.id === selectedOffer)
+                        .find((offer) => offer.id === detailsOfferId)
                         ?.requirements?.map((req, index) => (
                           <div key={index} className="flex items-start">
                             <span className="text-green-600 mr-2">•</span>
@@ -704,7 +462,7 @@ export function JobOffers() {
                     </h3>
                     <div className="mt-2 space-y-2">
                       {jobOffers
-                        .find((offer) => offer.id === selectedOffer)
+                        .find((offer) => offer.id === detailsOfferId)
                         ?.benefits?.map((benefit, index) => (
                           <div key={index} className="flex items-start">
                             <span className="text-green-600 mr-2">•</span>
@@ -724,7 +482,7 @@ export function JobOffers() {
                     </h3>
                     <div className="mt-1 p-3 bg-gray-50 rounded-md">
                       <p className="text-gray-700 whitespace-pre-line">
-                        {jobOffers.find((offer) => offer.id === selectedOffer)
+                        {jobOffers.find((offer) => offer.id === detailsOfferId)
                           ?.description || "Nenhuma descrição fornecida"}
                       </p>
                     </div>
@@ -736,9 +494,7 @@ export function JobOffers() {
                   <Button
                     variant="ghost"
                     onClick={() => {
-                      const offer = jobOffers.find(
-                        (offer) => offer.id === selectedOffer
-                      );
+                      const offer = jobOffers.find((offer) => offer.id === detailsOfferId);
                       if (offer) {
                         handleToggleActive(offer.id, !offer.is_active);
                       }
@@ -746,7 +502,7 @@ export function JobOffers() {
                     className="flex-1"
                     loading={toggleActiveMutation.isPending}
                   >
-                    {jobOffers.find((offer) => offer.id === selectedOffer)
+                    {jobOffers.find((offer) => offer.id === detailsOfferId)
                       ?.is_active
                       ? "Desativar"
                       : "Ativar"}
@@ -757,7 +513,7 @@ export function JobOffers() {
                       if (
                         confirm("Tem certeza que deseja excluir esta vaga?")
                       ) {
-                        handleDelete(selectedOffer);
+                        if (detailsOfferId) handleDelete(detailsOfferId);
                       }
                     }}
                     className="flex-1"
@@ -795,12 +551,12 @@ export function JobOffers() {
             <div className="p-6 border-b border-gray-200">
               <div className="flex items-center justify-between">
                 <h2 className="text-xl font-semibold text-gray-900">
-                  Créer une nouvelle offre
+                  Criar nova oferta
                 </h2>
                 <button
                   onClick={() => setIsCreateDrawerOpen(false)}
                   className="text-gray-400 hover:text-gray-500"
-                  aria-label="Fermer"
+                  aria-label="Fechar"
                 >
                   <X className="h-6 w-6" />
                 </button>
@@ -810,7 +566,7 @@ export function JobOffers() {
             <div className="flex-1 overflow-y-auto p-6 space-y-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Titre *
+                  Título *
                 </label>
                 <input
                   type="text"
@@ -825,7 +581,7 @@ export function JobOffers() {
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Description *
+                  Descrição *
                 </label>
                 <textarea
                   value={newOffer.description}
@@ -841,7 +597,7 @@ export function JobOffers() {
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Localisation *
+                    Localização *
                   </label>
                   <input
                     type="text"
@@ -855,7 +611,7 @@ export function JobOffers() {
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Type d'emploi *
+                    Tipo de emprego *
                   </label>
                   <select
                     value={newOffer.employment_type}
@@ -867,18 +623,18 @@ export function JobOffers() {
                     }
                     className="w-full px-3 py-2 border border-gray-300 rounded-md"
                   >
-                    <option value="Temps plein">Temps plein</option>
-                    <option value="Temps partiel">Temps partiel</option>
+                    <option value="Tempo integral">Tempo integral</option>
+                    <option value="Tempo parcial">Tempo parcial</option>
                     <option value="CDI">CDI</option>
                     <option value="CDD">CDD</option>
-                    <option value="Stage">Stage</option>
+                    <option value="Estágio">Estágio</option>
                   </select>
                 </div>
               </div>
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Salaire
+                  Salário
                 </label>
                 <input
                   type="text"
@@ -886,17 +642,17 @@ export function JobOffers() {
                   onChange={(e) =>
                     setNewOffer({ ...newOffer, salary_range: e.target.value })
                   }
-                  placeholder="Ex: 30 000€ - 40 000€ / an"
+                  placeholder="Ex.: 30 000€ - 40 000€ / ano"
                   className="w-full px-3 py-2 border border-gray-300 rounded-md"
                 />
               </div>
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Exigences
+                  Requisitos
                   {newOffer.requirements.length > 0 && (
                     <span className="ml-1 text-xs text-gray-500">
-                      ({newOffer.requirements.length} ajoutées)
+                      ({newOffer.requirements.length} adicionados)
                     </span>
                   )}
                 </label>
@@ -921,7 +677,7 @@ export function JobOffers() {
                       }
                     }}
                     className="flex-1 px-3 py-2 border border-gray-300 rounded-md"
-                    placeholder="Ajouter une exigence"
+                    placeholder="Adicionar um requisito"
                   />
                   <button
                     type="button"
@@ -967,10 +723,10 @@ export function JobOffers() {
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Avantages
+                  Benefícios
                   {newOffer.benefits.length > 0 && (
                     <span className="ml-1 text-xs text-gray-500">
-                      ({newOffer.benefits.length} ajoutés)
+                      ({newOffer.benefits.length} adicionados)
                     </span>
                   )}
                 </label>
@@ -995,7 +751,7 @@ export function JobOffers() {
                       }
                     }}
                     className="flex-1 px-3 py-2 border border-gray-300 rounded-md"
-                    placeholder="Ajouter un avantage"
+                    placeholder="Adicionar um benefício"
                   />
                   <button
                     type="button"
@@ -1050,7 +806,7 @@ export function JobOffers() {
                   htmlFor="is_active"
                   className="ml-2 block text-sm text-gray-700"
                 >
-                  Offre active
+                  Oferta ativa
                 </label>
               </div>
             </div>
@@ -1062,94 +818,94 @@ export function JobOffers() {
                   onClick={() => setIsCreateDrawerOpen(false)}
                   className="flex-1 px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500"
                 >
-                  Annuler
+                  Cancelar
                 </button>
                 <button
                   type="button"
                   onClick={async () => {
                     try {
-                      // Valider les champs requis
+                      // Validar os campos obrigatórios
                       if (!newOffer.title) {
-                        alert("Veuillez saisir un titre pour l'offre");
+                        alert("Por favor, insira um título para a oferta");
                         return;
                       }
                       if (!newOffer.description) {
-                        alert("Veuillez saisir une description pour l'offre");
+                        alert("Por favor, insira uma descrição para a oferta");
                         return;
                       }
                       if (!newOffer.location) {
-                        alert("Veuillez préciser la localisation du poste");
+                        alert("Por favor, informe a localização da vaga");
                         return;
                       }
 
-                      // Afficher un indicateur de chargement
+                      // Mostrar indicador de carregamento
                       const submitButton = document.querySelector(
                         "#submit-offer-button"
                       );
                       if (submitButton) {
                         submitButton.innerHTML =
-                          '<div class="spinner-border spinner-border-sm mr-2" role="status"></div> Création en cours...';
+                          '<div class="spinner-border spinner-border-sm mr-2" role="status"></div> Criando...';
                         submitButton.setAttribute("disabled", "disabled");
                       }
 
-                      // Appeler l'API pour créer l'offer
+                      // Chamar a API para criar a oferta
                       await jobOffersApi.create(newOffer);
 
-                      // Rafraîchir la liste des offres
+                      // Atualizar a lista de ofertas
                       await queryClient.invalidateQueries({
                         queryKey: ["job-offers"],
                       });
 
-                      // Afficher un message de succès
+                      // Exibir mensagem de sucesso
                       const successMessage = document.createElement("div");
                       successMessage.className =
                         "fixed top-4 right-4 bg-green-500 text-white px-4 py-2 rounded-md shadow-lg z-50";
-                      successMessage.textContent = "Offre créée avec succès";
+                      successMessage.textContent = "Oferta criada com sucesso";
                       document.body.appendChild(successMessage);
 
-                      // Fermer le drawer et réinitialiser le formulaire
+                      // Fechar o drawer e reiniciar o formulário
                       setIsCreateDrawerOpen(false);
                       setNewOffer({
                         title: "",
                         description: "",
                         location: "",
                         salary_range: "",
-                        employment_type: "Temps plein",
+                        employment_type: "Tempo integral",
                         requirements: [],
                         benefits: [],
                         is_active: true,
                       });
 
-                      // Supprimer le message de succès après 3 secondes
+                      // Remover a mensagem de sucesso após 3 segundos
                       setTimeout(() => {
                         successMessage.remove();
                       }, 3000);
                     } catch (error) {
                       console.error(
-                        "Erreur lors de la création de l'offre:",
+                        "Erro ao criar a oferta:",
                         error
                       );
 
-                      // Afficher un message d'erreur détaillé
+                      // Exibir uma mensagem de erro
                       const errorMessage = document.createElement("div");
                       errorMessage.className =
                         "fixed top-4 right-4 bg-red-500 text-white px-4 py-2 rounded-md shadow-lg z-50";
                       errorMessage.textContent =
-                        "Erreur lors de la création de l'offre";
+                        "Erro ao criar a oferta";
                       document.body.appendChild(errorMessage);
 
-                      // Supprimer le message d'erreur après 5 secondes
+                      // Remover a mensagem de erro após 5 segundos
                       setTimeout(() => {
                         errorMessage.remove();
                       }, 5000);
                     } finally {
-                      // Réactiver le bouton de soumission
+                      // Reativar o botão de envio
                       const submitButton = document.querySelector(
                         "#submit-offer-button"
                       );
                       if (submitButton) {
-                        submitButton.textContent = "Créer l'offre";
-                        submitButton.setAttribute("disabled", "false");
+                        submitButton.textContent = "Criar oferta";
+                        submitButton.removeAttribute("disabled");
                       }
                     }
                   }}
@@ -1161,7 +917,7 @@ export function JobOffers() {
                     !newOffer.location
                   }
                 >
-                  Créer l'offre
+                  Criar oferta
                 </button>
               </div>
             </div>

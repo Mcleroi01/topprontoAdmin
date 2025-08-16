@@ -8,7 +8,6 @@ import {
   MessageCircle,
   Briefcase,
   LogOut,
-  Truck
 } from 'lucide-react'
 import { useAuth } from '../../hooks/useAuth'
 import { Button } from '../ui/Button'
@@ -32,7 +31,11 @@ export function Sidebar() {
   return (
     <aside className="w-64  text-gray-900 shadow-sm">
       <div className="p-6 flex items-center justify-center border-b border-gray-400">
-        <h1 className=' text-3xl font-bold text-green-700'>Topronto</h1>
+        <img
+          src="/images/logo/logo.png"
+          alt="Topronto"
+          className="h-20 w-auto"
+        />
       </div>
       <nav className="flex-1 overflow-y-auto py-4">
         <ul className="space-y-1 px-3">

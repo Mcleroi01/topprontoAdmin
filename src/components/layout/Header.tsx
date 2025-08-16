@@ -20,11 +20,7 @@ export function Header() {
     <header className=" shadow-sm">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3 flex justify-between items-center">
         <Link to="/" className="flex items-center space-x-2">
-          <img 
-            src="/images/logo/logo (3).png" 
-            alt="TopPronto Logo" 
-            className="h-10 w-auto" 
-          />
+          
           <h1 className="text-3xl md:text-4xl font-bold text-gray-900">
             {t('dashboard.title')}
           </h1>
