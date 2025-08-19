@@ -9,6 +9,8 @@ if (!supabaseUrl || !supabaseKey) {
 
 export const supabase = createClient(supabaseUrl, supabaseKey)
 export const storage = supabase.storage
+// Configurable storage bucket for job applications documents
+export const JOB_APPLICATIONS_BUCKET = import.meta.env.VITE_SUPABASE_JOB_BUCKET || 'job-applications'
 
 // Types for our database
 export interface Driver {

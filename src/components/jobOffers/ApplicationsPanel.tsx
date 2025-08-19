@@ -2,7 +2,7 @@ import React, { useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { format } from "date-fns";
 import { jobApplicationsApi } from "../../services/api";
-import { storage } from "../../lib/supabase";
+import { storage, JOB_APPLICATIONS_BUCKET } from "../../lib/supabase";
 import { Button } from "../ui/Button";
 import { Badge } from "../ui/Badge";
 import { Card, CardContent } from "../ui/Card";
@@ -28,6 +28,8 @@ interface Application {
   status: "accepted" | "rejected" | "reviewed" | string;
   created_at: string;
   experience?: string;
+  cv_url?: string; // storage path to CV inside 'jobs-application' bucket
+  id_card_url?: string; // storage path to ID card inside 'jobs-application' bucket
 }
 
 interface ApplicationsPanelProps {
@@ -100,12 +102,17 @@ export const ApplicationsPanel: React.FC<ApplicationsPanelProps> = ({ offerId, o
     try {
       setCvUrl("");
       setIdCardUrl("");
-      const cvPath = `applications/${application.id}/cv.pdf`;
-      const idCardPath = `applications/${application.id}/id_card.pdf`;
-      const { data: cvData } = storage.from("jobs-application").getPublicUrl(cvPath);
-      const { data: idCardData } = storage.from("jobs-application").getPublicUrl(idCardPath);
+      // Prefer explicit paths from DB columns if provided; fallback to legacy convention
+      const cvPath = application.cv_url || `applications/${application.id}/cv.pdf`;
+      const idCardPath = application.id_card_url || `applications/${application.id}/id_card.pdf`;
+      const { data: cvData } = storage.from(JOB_APPLICATIONS_BUCKET).getPublicUrl(cvPath);
+      const { data: idCardData } = storage.from(JOB_APPLICATIONS_BUCKET).getPublicUrl(idCardPath);
+      console.log("CV URL:", cvData.publicUrl);
+      console.log("ID Card URL:", idCardData.publicUrl);
       setCvUrl(cvData.publicUrl);
       setIdCardUrl(idCardData.publicUrl);
+
+     
     } catch (error) {
       console.error("Error fetching application files:", error);
     }
