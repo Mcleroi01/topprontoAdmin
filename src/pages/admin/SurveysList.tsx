@@ -1,13 +1,13 @@
 import React from 'react'
-import { useInfiniteQuery } from '@tanstack/react-query'
+import { useInfiniteQuery, useQuery } from '@tanstack/react-query'
 import { Link, useSearchParams } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { motion } from 'framer-motion'
-import { Filter, ChevronDown, Loader2 } from 'lucide-react'
+import { Filter, ChevronDown, Loader2, BarChart3, TrendingUp, Globe } from 'lucide-react'
 import { Card, CardContent } from '../../components/ui/Card'
 import { Button } from '../../components/ui/Button'
 import { Table, TableHeader, TableBody, TableHead, TableRow, TableCell } from '../../components/ui/Table'
-import { getSurveys, SurveyListItem, SurveyFilters } from '../../services/supabase/surveyAdminService'
+import { getSurveys, getSurveyStats, SurveyListItem, SurveyFilters } from '../../services/supabase/surveyAdminService'
 
 const PAGE_SIZE = 20
 
@@ -57,6 +57,12 @@ export default function SurveysList() {
     dateFrom: searchParams.get('from') || undefined,
     dateTo: searchParams.get('to') || undefined,
   }
+
+  // Stats query based on current filters
+  const { data: stats, isLoading: isStatsLoading } = useQuery({
+    queryKey: ['admin-surveys-stats', initialFilters],
+    queryFn: () => getSurveyStats(initialFilters),
+  })
 
   const {
     data,
@@ -131,6 +137,57 @@ export default function SurveysList() {
           <p className="text-green-200 mt-1">
             {t('admin.surveys.subtitle', 'Visualisez et filtrez les enquêtes de satisfaction')}
           </p>
+        </div>
+
+        {/* Stats */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          <Card className="border border-gray-200 shadow-sm">
+            <CardContent className="p-4 flex items-center justify-between">
+              <div>
+                <div className="text-sm text-gray-500">{t('stats.total', 'Total réponses')}</div>
+                <div className="text-2xl font-semibold text-gray-900">{isStatsLoading ? '—' : stats?.total ?? 0}</div>
+              </div>
+              <div className="h-10 w-10 rounded-full bg-green-100 text-green-700 flex items-center justify-center">
+                <BarChart3 className="h-5 w-5" />
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card className="border border-gray-200 shadow-sm">
+            <CardContent className="p-4 flex items-center justify-between">
+              <div>
+                <div className="text-sm text-gray-500">{t('stats.last7', '7 derniers jours')}</div>
+                <div className="text-2xl font-semibold text-gray-900">{isStatsLoading ? '—' : stats?.last7Days ?? 0}</div>
+              </div>
+              <div className="h-10 w-10 rounded-full bg-blue-100 text-blue-700 flex items-center justify-center">
+                <TrendingUp className="h-5 w-5" />
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card className="border border-gray-200 shadow-sm">
+            <CardContent className="p-4 flex items-center justify-between">
+              <div>
+                <div className="text-sm text-gray-500">{t('stats.locale_pt', 'Locale PT')}</div>
+                <div className="text-2xl font-semibold text-gray-900">{isStatsLoading ? '—' : stats?.byLocale?.pt ?? 0}</div>
+              </div>
+              <div className="h-10 w-10 rounded-full bg-purple-100 text-purple-700 flex items-center justify-center">
+                <Globe className="h-5 w-5" />
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card className="border border-gray-200 shadow-sm">
+            <CardContent className="p-4 flex items-center justify-between">
+              <div>
+                <div className="text-sm text-gray-500">{t('stats.locale_en', 'Locale EN')}</div>
+                <div className="text-2xl font-semibold text-gray-900">{isStatsLoading ? '—' : stats?.byLocale?.en ?? 0}</div>
+              </div>
+              <div className="h-10 w-10 rounded-full bg-orange-100 text-orange-700 flex items-center justify-center">
+                <Globe className="h-5 w-5" />
+              </div>
+            </CardContent>
+          </Card>
         </div>
 
         {/* Filters */}

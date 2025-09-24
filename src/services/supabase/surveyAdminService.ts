@@ -119,3 +119,83 @@ export async function getSurveyById(id: string): Promise<SurveyDetail> {
 
   return data as SurveyDetail
 }
+
+export type SurveyStats = {
+  total: number
+  last7Days: number
+  byLocale: Record<string, number>
+}
+
+export async function getSurveyStats(filters: SurveyFilters = {}): Promise<SurveyStats> {
+  // Builder that starts with select for count typing, then applies filters
+  const buildCountQuery = () => {
+    let q = supabase.from('surveys').select('*', { count: 'exact', head: true })
+    if (filters.locale) q = q.eq('locale', filters.locale)
+    if (filters.partnershipDuration !== undefined && filters.partnershipDuration !== null && filters.partnershipDuration !== '') {
+      const dur = filters.partnershipDuration
+      if (typeof dur === 'string') {
+        const trimmed = dur.trim()
+        if (/^\d+\s*-\s*\d+$/.test(trimmed)) {
+          const [minStr, maxStr] = trimmed.split('-').map((s) => s.trim())
+          const min = Number(minStr)
+          const max = Number(maxStr)
+          if (!Number.isNaN(min)) q = q.gte('partnership_duration', min)
+          if (!Number.isNaN(max)) q = q.lte('partnership_duration', max)
+        } else if (/^>\s*\d+$/.test(trimmed)) {
+          const n = Number(trimmed.replace('>', '').trim())
+          if (!Number.isNaN(n)) q = q.gt('partnership_duration', n)
+        } else if (/^>=\s*\d+$/.test(trimmed)) {
+          const n = Number(trimmed.replace('>=', '').trim())
+          if (!Number.isNaN(n)) q = q.gte('partnership_duration', n)
+        } else if (/^<\s*\d+$/.test(trimmed)) {
+          const n = Number(trimmed.replace('<', '').trim())
+          if (!Number.isNaN(n)) q = q.lt('partnership_duration', n)
+        } else if (/^<=\s*\d+$/.test(trimmed)) {
+          const n = Number(trimmed.replace('<=', '').trim())
+          if (!Number.isNaN(n)) q = q.lte('partnership_duration', n)
+        } else {
+          q = q.eq('partnership_duration', dur)
+        }
+      } else {
+        q = q.eq('partnership_duration', dur)
+      }
+    }
+    if (filters.dateFrom) q = q.gte('created_at', filters.dateFrom)
+    if (filters.dateTo) {
+      const to = new Date(filters.dateTo)
+      if (!isNaN(to.getTime())) {
+        const plusOne = new Date(to.getTime())
+        plusOne.setDate(plusOne.getDate() + 1)
+        q = q.lt('created_at', plusOne.toISOString())
+      } else {
+        q = q.lte('created_at', filters.dateTo)
+      }
+    }
+    return q
+  }
+
+  // Total
+  const { count: totalCount, error: totalError } = await buildCountQuery()
+  if (totalError) throw totalError
+
+  // Last 7 days
+  const sevenDaysAgo = new Date()
+  sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7)
+  const { count: last7, error: last7Err } = await buildCountQuery().gte('created_at', sevenDaysAgo.toISOString())
+  if (last7Err) throw last7Err
+
+  // By locale
+  const locales = ['pt', 'en', 'fr']
+  const byLocale: Record<string, number> = {}
+  for (const loc of locales) {
+    const { count, error } = await buildCountQuery().eq('locale', loc)
+    if (error) throw error
+    byLocale[loc] = count ?? 0
+  }
+
+  return {
+    total: totalCount ?? 0,
+    last7Days: last7 ?? 0,
+    byLocale,
+  }
+}
