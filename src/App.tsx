@@ -1,8 +1,6 @@
-import React from 'react'
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom'
 import { QueryClientProvider } from '@tanstack/react-query'
 import { queryClient } from './lib/react-query'
-import { useAuth } from './hooks/useAuth'
 import { Layout } from './components/layout/Layout'
 import { ProtectedRoute } from './components/ProtectedRoute'
 import { Login } from './pages/auth/Login'
@@ -12,6 +10,8 @@ import { Enterprises } from './pages/Enterprises'
 import { Contacts } from './pages/Contacts'
 import { JobOffers } from './pages/JobOffers'
 import './lib/i18n'
+import SurveysList from './pages/admin/SurveysList'
+import SurveyDetail from './pages/admin/SurveyDetail'
 
 function AppContent() {
   return (
@@ -31,6 +31,8 @@ function AppContent() {
           <Route path="enterprises" element={<Enterprises />} />
           <Route path="contacts" element={<Contacts />} />
           <Route path="job-offers" element={<JobOffers />} />
+          <Route path="admin/surveys" element={<SurveysList />} />
+          <Route path="admin/surveys/:id" element={<SurveyDetail />} />
         </Route>
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>

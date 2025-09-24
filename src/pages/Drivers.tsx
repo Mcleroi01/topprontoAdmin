@@ -15,9 +15,7 @@ import {
   Mail,
   MapPin,
   Briefcase,
-  Building,
   User,
-  X as XIcon,
 } from "lucide-react";
 import { Card, CardContent } from "../components/ui/Card";
 import { Input } from "../components/ui/Input";
@@ -182,207 +180,6 @@ export function Drivers() {
   }
 
   // Composant Drawer pour les détails du conducteur
-  const DriverDetailDrawer = () => (
-    <div
-      className={`fixed inset-y-0 right-0 w-full sm:max-w-md bg-white shadow-xl transform ${
-        isDrawerOpen ? "translate-x-0" : "translate-x-full"
-      } transition-transform duration-300 ease-in-out z-50`}
-    >
-      <div className="h-full flex flex-col">
-        {/* En-tête du Drawer */}
-        <div className="px-6 py-4 border-b border-gray-200 flex items-center justify-between">
-          <h2 className="text-lg font-medium text-gray-900">
-            Détails du conducteur
-          </h2>
-          <button
-            onClick={() => setIsDrawerOpen(false)}
-            className="text-gray-400 hover:text-gray-500"
-          >
-            <XIcon className="h-6 w-6" />
-          </button>
-        </div>
-
-        {/* Contenu du Drawer */}
-        <div className="flex-1 overflow-y-auto p-6">
-          {selectedDriver && (
-            <>
-              {/* Section Profil */}
-              <div className="flex items-center space-x-4 mb-6">
-                <div className="h-16 w-16 rounded-full bg-green-100 flex items-center justify-center text-green-600 text-2xl font-bold">
-                  {selectedDriver.first_name.charAt(0)}
-                  {selectedDriver.last_name.charAt(0)}
-                </div>
-                <div>
-                  <h3 className="text-xl font-semibold text-gray-900">
-                    {selectedDriver.first_name} {selectedDriver.last_name}
-                  </h3>
-                  <Badge
-                    className={`mt-1 ${
-                      selectedDriver.status === "approved"
-                        ? "bg-green-100 text-green-800"
-                        : selectedDriver.status === "pending"
-                        ? "bg-yellow-100 text-yellow-800"
-                        : "bg-red-100 text-red-800"
-                    }`}
-                  >
-                    {t(`drivers.${selectedDriver.status}`)}
-                  </Badge>
-                </div>
-              </div>
-
-              {/* Section Détails */}
-              <div className="space-y-4">
-                <div className="space-y-2">
-                  <h4 className="text-sm font-medium text-gray-500">
-                    INFORMATIONS PERSONNELLES
-                  </h4>
-                  <div className="space-y-2">
-                    <div className="flex items-center text-sm text-gray-700">
-                      <Mail className="h-4 w-4 mr-2 text-gray-400" />
-                      {selectedDriver.email}
-                    </div>
-                    <div className="flex items-center text-sm text-gray-700">
-                      <Phone className="h-4 w-4 mr-2 text-gray-400" />
-                      {selectedDriver.phone || "Non renseigné"}
-                    </div>
-                    <div className="flex items-center text-sm text-gray-700">
-                      <MapPin className="h-4 w-4 mr-2 text-gray-400" />
-                      {selectedDriver.city || "Non renseignée"}
-                    </div>
-                    <div className="flex items-center text-sm text-gray-700">
-                      <Briefcase className="h-4 w-4 mr-2 text-gray-400" />
-                      {selectedDriver.experience_years || 0}{" "}
-                      {selectedDriver.experience_years === 1 ? "an" : "ans"}{" "}
-                      d'expérience
-                    </div>
-                  </div>
-                </div>
-
-                {/* Section Véhicule */}
-                {selectedDriver.has_vehicle && (
-                  <div className="space-y-2">
-                    <h4 className="text-sm font-medium text-gray-500">
-                      VÉHICULE
-                    </h4>
-                    <div className="bg-gray-50 p-3 rounded-md">
-                      <p className="text-sm text-gray-700">
-                        {selectedDriver.vehicle_type ||
-                          "Type de véhicule non spécifié"}
-                      </p>
-                    </div>
-                  </div>
-                )}
-
-                {/* Section Entreprises */}
-                <div className="space-y-2">
-                  <h4 className="text-sm font-medium text-gray-500">
-                    ENTREPRISES
-                  </h4>
-                  <div className="space-y-2">
-                    {selectedDriver.enterprises?.length > 0 ? (
-                      selectedDriver.enterprises.map((enterprise: any) => (
-                        <div
-                          key={enterprise.id}
-                          className="flex items-center p-3 bg-gray-50 rounded-md"
-                        >
-                          <Building className="h-5 w-5 text-gray-400 mr-3" />
-                          <div>
-                            <p className="text-sm font-medium text-gray-900">
-                              {enterprise.name}
-                            </p>
-                            <p className="text-xs text-gray-500">
-                              {enterprise.role || "Rôle non spécifié"}
-                            </p>
-                          </div>
-                        </div>
-                      ))
-                    ) : (
-                      <p className="text-sm text-gray-500">
-                        Aucune entreprise associée
-                      </p>
-                    )}
-                  </div>
-                </div>
-
-                {/* Section Offres d'emploi */}
-                <div className="space-y-2">
-                  <h4 className="text-sm font-medium text-gray-500">
-                    OFFRES D'EMPLOI
-                  </h4>
-                  <div className="space-y-2">
-                    {selectedDriver.jobOffers?.length > 0 ? (
-                      selectedDriver.jobOffers.map((offer: any) => (
-                        <div
-                          key={offer.id}
-                          className="p-3 bg-gray-50 rounded-md"
-                        >
-                          <div className="flex justify-between items-start">
-                            <div>
-                              <p className="text-sm font-medium text-gray-900">
-                                {offer.title}
-                              </p>
-                              <p className="text-xs text-gray-500">
-                                {offer.enterprise?.name}
-                              </p>
-                            </div>
-                            <Badge
-                              variant={
-                                offer.status === "active"
-                                  ? "default"
-                                  : "secondary"
-                              }
-                              className="text-xs"
-                            >
-                              {offer.status === "active"
-                                ? "Active"
-                                : "Terminée"}
-                            </Badge>
-                          </div>
-                          <div className="mt-2 flex items-center text-xs text-gray-500">
-                            <MapPin className="h-3 w-3 mr-1" />
-                            {offer.location || "Lieu non spécifié"}
-                          </div>
-                        </div>
-                      ))
-                    ) : (
-                      <p className="text-sm text-gray-500">
-                        Aucune offre d'emploi
-                      </p>
-                    )}
-                  </div>
-                </div>
-              </div>
-            </>
-          )}
-        </div>
-
-        {/* Pied de page du Drawer */}
-        <div className="p-4 border-t border-gray-200 bg-gray-50">
-          <div className="flex space-x-3">
-            <Button
-              variant="ghost"
-              className="flex-1"
-              onClick={() => {
-                // Logique pour contacter le conducteur
-              }}
-            >
-              <Mail className="h-4 w-4 mr-2" />
-              Contacter
-            </Button>
-            <Button
-              className="flex-1 bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800"
-              onClick={() => {
-                // Logique pour modifier le conducteur
-              }}
-            >
-              <User className="h-4 w-4 mr-2" />
-              Modifier le profil
-            </Button>
-          </div>
-        </div>
-      </div>
-    </div>
-  );
 
   return (
     <div className="relative">
@@ -851,7 +648,7 @@ export function Drivers() {
                 {selectedDriver.status === 'pending' && (
                   <>
                     <Button
-                      variant="outline"
+                      variant="ghost"
                       onClick={() => handleStatusUpdate(selectedDriver.id, 'approved')}
                       className="flex-1 bg-green-50 text-green-700 hover:bg-green-100"
                     >
@@ -859,7 +656,7 @@ export function Drivers() {
                       Approuver
                     </Button>
                     <Button
-                      variant="outline"
+                      variant="ghost"
                       onClick={() => handleStatusUpdate(selectedDriver.id, 'rejected')}
                       className="flex-1 bg-red-50 text-red-700 hover:bg-red-100"
                     >
@@ -870,7 +667,7 @@ export function Drivers() {
                 )}
                 {selectedDriver.status !== 'pending' && (
                   <Button
-                    variant="outline"
+                    variant="ghost"
                     onClick={() => {
                       // Add logic to contact the driver
                     }}
