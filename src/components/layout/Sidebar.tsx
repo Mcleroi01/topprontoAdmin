@@ -22,7 +22,7 @@ export function Sidebar() {
     { to: '/enterprises', icon: Building2, label: t('nav.enterprises') },
     { to: '/contacts', icon: MessageCircle, label: t('nav.contacts') },
     { to: '/job-offers', icon: Briefcase, label: t('nav.jobOffers') },
-    { to: '/admin/surveys', icon: Briefcase, label: t('nav.surveys') },
+    // { to: '/admin/surveys', icon: Briefcase, label: t('nav.surveys') },
   ]
 
   const handleSignOut = async () => {

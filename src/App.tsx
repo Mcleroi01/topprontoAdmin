@@ -10,8 +10,8 @@ import { Enterprises } from './pages/Enterprises'
 import { Contacts } from './pages/Contacts'
 import { JobOffers } from './pages/JobOffers'
 import './lib/i18n'
-import SurveysList from './pages/admin/SurveysList'
-import SurveyDetail from './pages/admin/SurveyDetail'
+// import SurveysList from './pages/admin/SurveysList'
+// import SurveyDetail from './pages/admin/SurveyDetail'
 
 function AppContent() {
   return (
@@ -31,8 +31,8 @@ function AppContent() {
           <Route path="enterprises" element={<Enterprises />} />
           <Route path="contacts" element={<Contacts />} />
           <Route path="job-offers" element={<JobOffers />} />
-          <Route path="admin/surveys" element={<SurveysList />} />
-          <Route path="admin/surveys/:id" element={<SurveyDetail />} />
+          {/* <Route path="admin/surveys" element={<SurveysList />} /> */}
+          {/* <Route path="admin/surveys/:id" element={<SurveyDetail />} /> */}
         </Route>
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
